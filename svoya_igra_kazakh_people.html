@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Своя игра: формирование казахского народа</title>
+<style>
+:root{--bg:#12263a;--panel:#1d3650;--cell:#2a5c93;--gold:#d9a53f;--ink:#f4efe3;--mute:#b9c4cf;--ok:#3f9b6a;--bad:#c4584a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12263a;--panel:#1d3650;--ink:#f4efe3}}
+:root[data-theme="dark"]{--bg:#12263a;--panel:#1d3650;--ink:#f4efe3}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,serif;padding:16px 12px 28px;min-height:100vh}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-size:clamp(20px,5vw,34px);color:var(--gold);margin:4px 0 4px;text-align:center;line-height:1.15}
+.sub{text-align:center;color:var(--mute);font:14px Arial,sans-serif;margin:0 0 14px}
+.teams{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.team{background:var(--panel);border-radius:10px;padding:8px;text-align:center;font-family:Arial,sans-serif}
+.team b{display:block;font-size:13px;color:var(--mute);font-weight:600}
+.team span{font-size:clamp(20px,5vw,30px);font-weight:700;color:var(--gold)}
+.board{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.cat{background:var(--panel);color:var(--gold);font:700 clamp(11px,2.7vw,19px)/1.1 Arial,sans-serif;text-transform:uppercase;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px 2px;min-height:52px;border-radius:8px;letter-spacing:.02em}
+.cell{background:var(--cell);color:var(--gold);border:0;border-radius:8px;font:700 clamp(18px,5vw,40px) Georgia,serif;padding:clamp(16px,4.5vw,34px) 0;cursor:pointer}
+.cell:active{transform:scale(.96)}
+.cell.used{background:var(--panel);color:transparent;cursor:default;opacity:.5}
+.tools{display:flex;justify-content:center;margin-top:16px}
+.btn{background:transparent;color:var(--mute);border:1px solid var(--mute);border-radius:8px;padding:10px 16px;font:15px Arial,sans-serif;cursor:pointer}
+.ov{position:fixed;inset:0;background:rgba(6,14,24,.88);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
+.ov.on{display:flex}
+.card{background:var(--panel);border-radius:16px;padding:22px;width:100%;max-width:640px;max-height:92vh;overflow:auto;border:2px solid var(--gold)}
+.meta{color:var(--gold);font:700 15px Arial,sans-serif;text-transform:uppercase;letter-spacing:.04em}
+.q{font-size:clamp(22px,5.5vw,34px);line-height:1.3;margin:12px 0 18px}
+.a{display:none;background:var(--bg);border-radius:10px;padding:14px;margin-bottom:14px;font-size:clamp(20px,5vw,28px);color:var(--gold);line-height:1.3}
+.a.on{display:block}
+.row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.row .btn{flex:1;min-width:90px;color:var(--ink);border-color:var(--mute)}
+.show{width:100%;background:var(--gold);color:#12263a;border:0;font-weight:700;font-size:17px;padding:14px}
+.ok{border-color:var(--ok)!important}
+.bad{border-color:var(--bad)!important}
+.lbl{font:13px Arial,sans-serif;color:var(--mute);margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Своя игра</h1>
+<p class="sub">Формирование казахского народа · выберите категорию и очки</p>
+<div class="teams" id="teams"></div>
+<div class="board" id="board"></div>
+<div class="tools"><button class="btn" id="reset">Начать заново</button></div>
+</div>
+<div class="ov" id="ov"><div class="card">
+<div class="meta" id="meta"></div>
+<div class="q" id="q"></div>
+<div class="a" id="a"></div>
+<button class="btn show" id="show">Показать ответ</button>
+<div id="award" style="display:none">
+<div class="lbl">Ответили верно (+очки):</div><div class="row" id="plus"></div>
+<div class="lbl">Ответили неверно (−очки):</div><div class="row" id="minus"></div>
+<div class="row"><button class="btn" id="close" style="margin-top:12px">Закрыть вопрос</button></div>
+</div>
+</div></div>
+<script>
+const DATA=[
+{n:"Древность",q:[
+["Как называется стиль искусства саков с изображениями животных?","Звериный стиль"],
+["Какой союз племён населял Семиречье в III в. до н.э. – V в. н.э.?","Усуни"],
+["В бассейне какой реки находилось государство Кангюй?","Сырдарья"],
+["Золотой человек найден в кургане Иссык. В какой области Казахстана?","Алматинская область (1969 г.)"],
+["Как называлась столица усуней?","Чигучэн («Красная долина»)"]]},
+{n:"Тюрки",q:[
+["В каком веке образовался Тюркский каганат?","В VI веке (552 г.)"],
+["Как называется древнетюркское письмо?","Руническое (орхоно-енисейское)"],
+["Какой союз племён в IX–XI вв. жил в Приаралье и на Сырдарье?","Огузы"],
+["На берегах какой реки жили кимаки?","Иртыш"],
+["Как называлась степь, ставшая центром кыпчаков?","Дешт-и-Кыпчак"]]},
+{n:"Монголы",q:[
+["В каком году была создана Монгольская империя Чингисхана?","1206 год"],
+["Как назывался удел старшего сына Чингисхана, куда вошли казахские степи?","Улус Джучи"],
+["Какие племена, пришедшие с монголами, вошли в состав казахов?","Найманы, кереи, конграты, жалаиры и другие"],
+["В каком году образовано государство кочевых узбеков Абулхаира?","1428 год"],
+["Какой язык остался основой общения, несмотря на приход монголов?","Тюркский (кыпчакский)"]]},
+{n:"Ханство",q:[
+["В каком году, по традиции, образовано Казахское ханство?","1465 год"],
+["Кто были первые ханы Казахского ханства?","Керей и Жанибек"],
+["Что означает слово «казах»?","Вольный, свободный"],
+["Какой свод законов связан с именем Касым-хана?","«Қасым ханның қасқа жолы»"],
+["Куда откочевали Керей и Жанибек со своими племенами?","В Моголистан (Семиречье, долина реки Чу)"]]},
+{n:"Жузы",q:[
+["Сколько жузов у казахов?","Три"],
+["Какой жуз занимал западные земли?","Младший жуз"],
+["В какой жуз входят аргыны, найманы и кыпчаки?","Средний жуз"],
+["Назовите любое племя Старшего жуза.","Дулат, албан, суан, жалаир, ысты, шапырашты, ошакты"],
+["Какие три рода входят в Младший жуз?","Алимулы, байулы, жетыру"]]}
+];
+const VALS=[100,200,300,400,500];
+let score=[0,0,0],cur=null;
+const $=id=>document.getElementById(id);
+function drawScores(){$("teams").innerHTML=score.map((s,i)=>`<div class="team"><b>Команда ${i+1}</b><span>${s}</span></div>`).join("")}
+function build(){
+ const b=$("board");b.innerHTML="";
+ DATA.forEach(c=>{const d=document.createElement("div");d.className="cat";d.textContent=c.n;b.appendChild(d)});
+ VALS.forEach((v,r)=>DATA.forEach((c,ci)=>{
+  const x=document.createElement("button");x.className="cell";x.textContent=v;
+  x.onclick=()=>open(ci,r,x);b.appendChild(x)}));
+ drawScores();
+}
+function open(ci,r,el){
+ cur={ci,r,el,v:VALS[r]};
+ const it=DATA[ci].q[r];
+ $("meta").textContent=DATA[ci].n+" · "+VALS[r];
+ $("q").textContent=it[0];$("a").textContent=it[1];
+ $("a").classList.remove("on");$("show").style.display="block";$("award").style.display="none";
+ $("ov").classList.add("on");
+}
+$("show").onclick=()=>{$("a").classList.add("on");$("show").style.display="none";$("award").style.display="block"};
+function mk(sign){return [0,1,2].map(i=>`<button class="btn ${sign>0?"ok":"bad"}" data-i="${i}" data-s="${sign}">К${i+1}</button>`).join("")}
+$("plus").innerHTML=mk(1);$("minus").innerHTML=mk(-1);
+$("award").addEventListener("click",e=>{
+ const t=e.target.closest("button[data-i]");if(!t)return;
+ score[+t.dataset.i]+=cur.v*(+t.dataset.s);drawScores();
+ if(+t.dataset.s>0)closeQ();
+});
+function closeQ(){cur.el.classList.add("used");cur.el.disabled=true;$("ov").classList.remove("on")}
+$("close").onclick=closeQ;
+$("reset").onclick=()=>{score=[0,0,0];build()};
+build();
+</script>
+</body>
+</html>
